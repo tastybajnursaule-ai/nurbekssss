@@ -44,7 +44,7 @@ module.exports = async (req, res) => {
       return { role: m.role === "model" ? "model" : "user", parts };
     });
 
-    const model = process.env.GEMINI_MODEL || "gemini-1.5-flash";
+    const model = process.env.GEMINI_MODEL || "gemini-1.5-flash-latest";
     const r = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`, {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-goog-api-key": key },
