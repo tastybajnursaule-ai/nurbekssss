@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Learning Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1a3a;--bg2:#17254f;--ink:#eef2ff;--mut:#a9b6dd;--blue:#4b8bbe;--yel:#ffd43b;--line:#2b3c72;--ok:#58d68d;--bad:#ff7a7a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.65 Montserrat,system-ui,sans-serif}
+#app{display:grid;grid-template-columns:230px 1fr;min-height:100vh}
+#nav{position:sticky;top:0;height:100vh;padding:20px 12px;background:#0a1230;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:4px}
+#nav b{font-size:18px;padding:4px 12px 16px;color:var(--yel)}
+#nav a{display:flex;gap:10px;align-items:center;padding:10px 12px;border-radius:10px;color:var(--mut);text-decoration:none;cursor:pointer}
+#nav a:hover{background:var(--bg2);color:var(--ink)}
+#nav a.on{background:var(--blue);color:#fff}
+main{padding:32px clamp(16px,4vw,48px);max-width:980px;width:100%}
+h1,h2{font-weight:800;line-height:1.2;margin:0 0 .4em}h1{font-size:2rem}h2{font-size:1.6rem}
+p.sub{color:var(--mut);margin:0 0 20px}
+.page[hidden]{display:none}
+.card{background:var(--bg2);border:1px solid var(--line);border-radius:14px;padding:20px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px;margin:16px 0}
+.stat b{display:block;font-size:1.8rem;color:var(--yel)}
+.go{cursor:pointer}.go:hover{border-color:var(--blue)}
+.btn,.chip,select,input,textarea{font:inherit;color:var(--ink);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.btn{background:var(--yel);color:#10183a;font-weight:600;border:0;cursor:pointer}
+.btn:disabled{opacity:.5;cursor:wait}
+.btn2{background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:10px 14px;cursor:pointer}
+.chip{cursor:pointer;font-size:14px;padding:8px 12px}.chip:hover,.chip.on{border-color:var(--yel)}
+.chips{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 12px}
+:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+.log{display:flex;flex-direction:column;gap:10px;min-height:120px;max-height:56vh;overflow:auto}
+.m{padding:12px 16px;border-radius:14px;max-width:94%;overflow-wrap:anywhere}
+.m.u{align-self:flex-end;background:var(--blue)}
+.m.a{background:var(--bg2);border:1px solid var(--line)}
+.m img{max-width:220px;border-radius:8px;display:block;margin-bottom:6px}
+pre{background:#0a1230;border-radius:8px;padding:10px 12px;overflow-x:auto;font:400 14px/1.5 'JetBrains Mono',monospace;margin:8px 0}
+code{font-family:'JetBrains Mono',monospace;background:#0a1230;padding:1px 5px;border-radius:5px}
+.comp{display:flex;gap:8px;align-items:flex-end;margin-top:12px}
+.comp textarea{flex:1;resize:vertical;min-height:48px}
+#prev img{max-height:90px;border-radius:8px;margin-top:8px}
+.row{display:flex;flex-wrap:wrap;gap:10px;align-items:end;margin:12px 0}
+.row label{font-size:13px;color:var(--mut);display:flex;flex-direction:column;gap:4px}
+canvas{width:100%;height:auto;background:#0a1230;border:1px solid var(--line);border-radius:12px}
+.good{color:var(--ok)}.bad{color:var(--bad)}
+.opt{display:block;margin:6px 0;cursor:pointer}
+.les{display:flex;flex-direction:column;gap:6px}
+.two{display:grid;grid-template-columns:260px 1fr;gap:16px}
+@media(max-width:800px){
+ #app{display:block}
+ #nav{position:fixed;inset:auto 0 0 0;height:auto;flex-direction:row;justify-content:space-around;padding:6px;z-index:9;border-right:0;border-top:1px solid var(--line)}
+ #nav b{display:none}#nav a{flex-direction:column;gap:0;font-size:11px;padding:6px 4px;text-align:center}
+ main{padding-bottom:96px}.two{grid-template-columns:1fr}
+}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+</style>
+</head>
+<body>
+<div id="app">
+<nav id="nav"></nav>
+<main>
+<section class="page" id="p-home"></section>
+<section class="page" id="p-solve" hidden><h2>🧮 Есеп шешу</h2><p class="sub">Есептің шартын жазыңыз немесе суретін жүктеңіз. AI қадамдап шешіп, жауапты тексереді.</p><div id="solveBox" class="card"></div></section>
+<section class="page" id="p-tutor" hidden><h2>🤖 AI тьютор</h2><p class="sub">Python, жасанды интеллект және математика бойынша кез келген сұрақ қойыңыз.</p><div id="tutorBox" class="card"></div></section>
+<section class="page" id="p-practice" hidden></section>
+<section class="page" id="p-graph" hidden>
+<h2>📈 Функция графигі</h2><p class="sub">Мысалы: x^2 - 5x + 2, sin(x), 2x^3 - x, sqrt(x)</p>
+<div class="row"><label>f(x) =<input id="gF" value="x^2 - 5x + 2" size="22"></label><label>x min<input id="gA" type="number" value="-5" style="width:90px"></label><label>x max<input id="gB" type="number" value="8" style="width:90px"></label><button class="btn" id="gGo">Сызу</button></div>
+<canvas id="cv" width="900" height="480"></canvas>
+<p id="gR" class="sub" style="margin-top:12px"></p><p id="gErr" class="bad"></p>
+</section>
+<section class="page" id="p-courses" hidden></section>
+</main>
+</div>
+
+<script>
+const $=(s,r=document)=>r.querySelector(s);
+const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const md=t=>esc(t).replace(/```(?:\w+)?\n?([\s\S]*?)```/g,"<pre>$1</pre>").replace(/\*\*(.+?)\*\*/g,"<b>$1</b>").replace(/`([^`]+)`/g,"<code>$1</code>").replace(/\n/g,"<br>");
+let S={xp:0,ok:0,n:0,done:{}};
+try{Object.assign(S,JSON.parse(localStorage.getItem("hub")||"{}"))}catch(e){}
+const save=()=>{try{localStorage.setItem("hub",JSON.stringify(S))}catch(e){}};
+
+/* ---------- Өрнек есептегіш (eval-сіз, қауіпсіз) ---------- */
+function calc(src){
+  src=src.toLowerCase().replace(/²/g,"^2").replace(/³/g,"^3").replace(/−/g,"-").replace(/×/g,"*").replace(/,/g,".");
+  const T=[],re=/\s*(\d+\.?\d*|\.\d+|sqrt|sin|cos|tan|log|ln|exp|abs|pi|[xe]|[-+*/^()])/y;
+  let pos=0,m;
+  while(pos<src.length){re.lastIndex=pos;m=re.exec(src);if(!m){if(/^\s*$/.test(src.slice(pos)))break;throw Error("bad")}T.push(m[1]);pos=re.lastIndex}
+  let i=0;
+  const F={sqrt:Math.sqrt,sin:Math.sin,cos:Math.cos,tan:Math.tan,log:Math.log10,ln:Math.log,exp:Math.exp,abs:Math.abs};
+  function expr(){let l=term();while(T[i]==="+"||T[i]==="-"){const o=T[i++],r=term(),a=l;l=o==="+"?x=>a(x)+r(x):x=>a(x)-r(x)}return l}
+  function term(){let l=unary();for(;;){const t=T[i];let o;if(t==="*"||t==="/")o=T[i++];else if(t!==undefined&&![")","+","-","^"].includes(t))o="*";else break;const r=unary(),a=l;l=o==="*"?x=>a(x)*r(x):x=>a(x)/r(x)}return l}
+  function unary(){if(T[i]==="-"){i++;const a=unary();return x=>-a(x)}if(T[i]==="+"){i++;return unary()}return pow()}
+  function pow(){const b=atom();if(T[i]==="^"){i++;const e=unary();return x=>Math.pow(b(x),e(x))}return b}
+  function atom(){const t=T[i++];if(t===undefined)throw Error("bad");
+    if(/^[\d.]/.test(t)){const v=parseFloat(t);return()=>v}
+    if(t==="x")return x=>x;if(t==="pi")return()=>Math.PI;if(t==="e")return()=>Math.E;
+    if(F[t]){const a=atom();return x=>F[t](a(x))}
+    if(t==="("){const a=expr();if(T[i++]!==")")throw Error("bad");return a}
+    throw Error("bad")}
+  const f=expr();if(i<T.length)throw Error("bad");return f;
+}
+
+/* ---------- AI сұранысы ---------- */
+async function ai(mode,messages,image){
+  const r=await fetch("/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode,messages,image})});
+  let d;try{d=await r.json()}catch(e){throw Error("Сервер жауап бермеді. Қайталап көріңіз.")}
+  if(!r.ok)throw Error(d.error||"Қате шықты");return d.text;
+}
+function readImg(file){return new Promise((ok,no)=>{const im=new Image();im.onload=()=>{const k=Math.min(1,1280/Math.max(im.width,im.height)),c=document.createElement("canvas");c.width=im.width*k;c.height=im.height*k;c.getContext("2d").drawImage(im,0,0,c.width,c.height);const u=c.toDataURL("image/jpeg",.85);ok({mime:"image/jpeg",data:u.split(",")[1],url:u})};im.onerror=no;im.src=URL.createObjectURL(file)})}
+
+function chatUI(root,mode,first,after,ph){
+  root.innerHTML=`<div class="chips"></div><div class="log"></div><div class="prev"></div><div class="comp"><label class="btn2" title="Сурет жүктеу">📷<input type="file" accept="image/*" hidden></label><textarea rows="2" placeholder="${ph}"></textarea><button class="btn">Жіберу</button></div>`;
+  const chips=$(".chips",root),log=$(".log",root),prev=$(".prev",root),ta=$("textarea",root),btn=$(".btn",root),file=$("input",root);
+  let hist=[],img=null,busy=false;
+  const setChips=list=>{chips.innerHTML="";list.forEach(c=>{const b=document.createElement("button");b.className="chip";b.textContent=c[0];b.onclick=()=>c[2]?(ta.value=c[1],ta.focus()):send(c[1]);chips.appendChild(b)})};
+  const add=(cls,html)=>{const d=document.createElement("div");d.className="m "+cls;d.innerHTML=html;log.appendChild(d);log.scrollTop=log.scrollHeight;return d};
+  file.onchange=async()=>{if(!file.files[0])return;try{img=await readImg(file.files[0]);prev.innerHTML=`<img src="${img.url}" alt="">`}catch(e){prev.textContent="Суретті оқи алмадым"}file.value=""};
+  async function send(text){
+    text=(text||"").trim();if(busy||(!text&&!img))return;
+    const q=text||"Суреттегі есепті шеш";busy=true;btn.disabled=true;
+    add("u",(img?`<img src="${img.url}" alt="">`:"")+esc(q));
+    hist.push({role:"user",text:q});const im=img?{mime:img.mime,data:img.data}:null;img=null;prev.innerHTML="";ta.value="";
+    const wait=add("a","Ойланып жатыр…");
+    try{const a=await ai(mode,hist.slice(-12),im);hist.push({role:"model",text:a});wait.innerHTML=md(a);setChips(after)}
+    catch(e){hist.pop();wait.innerHTML="⚠️ "+esc(e.message)}
+    busy=false;btn.disabled=false;log.scrollTop=log.scrollHeight;
+  }
+  btn.onclick=()=>send(ta.value);
+  ta.onkeydown=e=>{if(e.key==="Enter"&&!e.shiftKey){e.preventDefault();send(ta.value)}};
+  setChips(first);return{send};
+}
+const solve=chatUI($("#solveBox"),"solve",
+  [["2x² − 5x + 2 = 0 теңдеуін шеш","2x^2 - 5x + 2 = 0 теңдеуін шеш"],["Мәтіндік есеп","Пойыз сағатына 60 км жылдамдықпен 3 сағат жүрді. Ол қанша жол жүрді? 150 км жүру үшін қанша уақыт керек?"],["Туынды","f(x) = 3x^3 + 2x функциясының туындысын тап"]],
+  [["Қарапайым түсіндір","Мына шешуді 7-сынып оқушысына қарапайым тілмен түсіндір"],["Ұқсас есеп бер","Осыған ұқсас жаңа есеп бер, шешуін көрсетпе"],["Жауабымды тексер","Менің жауабым: ",1]],
+  "Есептің шартын жазыңыз немесе 📷 арқылы суретін қосыңыз");
+const tutor=chatUI($("#tutorBox"),"chat",
+  [["Жасанды интеллект деген не?","Жасанды интеллект деген не? Қарапайым мысалмен түсіндір"],["Python-да цикл","Python-да for циклі қалай жұмыс істейді? Мысал көрсет"],["Дискриминант","Дискриминант не үшін керек?"]],[],
+  "Сұрағыңызды жазыңыз");
+
+/* ---------- Жаттығу ---------- */
+const R=(a,b)=>Math.floor(Math.random()*(b-a+1))+a;
+const sg=n=>n<0?"− "+(-n):"+ "+n;
+function poly2(a,b,c){return(a===1?"":a)+"x²"+(b?" "+sg(b)+"x":"")+(c?" "+sg(c):"")}
+const TYPES={
+  quad:()=>{const r1=R(-6,6),r2=R(-6,6),a=R(1,2);return{t:`${poly2(a,-a*(r1+r2),a*r1*r2)} = 0 теңдеуін шешіңіз`,hint:"Түбірлерді ; арқылы жазыңыз, мысалы: 2; 3",ans:[...new Set([r1,r2])].sort((p,q)=>p-q),sol:`D = b² − 4ac, түбірлері: ${[...new Set([r1,r2])].join("; ")}`,mode:"set"}},
+  lin:()=>{const x=R(-9,9),a=R(2,9),b=R(-9,9);return{t:`${a}x ${sg(b)} = ${a*x+b} теңдеуін шешіңіз`,hint:"Жауабы: x-тің мәні",ans:[x],sol:`${a}x = ${a*x+b-b}, x = ${x}`,mode:"set"}},
+  sys:()=>{const x=R(-5,9),y=R(-5,9);return{t:`x + y = ${x+y};  x − y = ${x-y}. x және y табыңыз`,hint:"Жауабы: x; y",ans:[x,y],sol:`Қосқанда 2x = ${2*x}, x = ${x}, y = ${y}`,mode:"list"}},
+  der:()=>{const a=R(1,5),b=R(-5,5),c=R(1,3);return{t:`f(x) = ${a}x³ ${sg(b)}x² болса, f′(${c}) неге тең?`,hint:"Жауабы: бір сан",ans:[3*a*c*c+2*b*c],sol:`f′(x) = ${3*a}x² ${sg(2*b)}x, f′(${c}) = ${3*a*c*c+2*b*c}`,mode:"set"}}};
+const NAMES={quad:"Квадрат теңдеу",lin:"Сызықтық теңдеу",sys:"Жүйе",der:"Туынды"};
+let cur=null,curType="quad",solved=false,counted=false;
+function nums(s){return s.replace(/[xy]\d?\s*=/gi," ").split(/[;\s]+/).filter(Boolean).map(v=>calc(v)(0))}
+function renderPractice(){
+  const p=$("#p-practice");
+  p.innerHTML=`<h2>🎯 Жаттығу</h2><p class="sub">Жауап дұрыс болса +10 XP аласыз. Есептер кездейсоқ жасалады, тексеру құрылғыңызда өтеді.</p>
+  <div class="chips">${Object.keys(NAMES).map(k=>`<button class="chip ${k===curType?"on":""}" data-k="${k}">${NAMES[k]}</button>`).join("")}</div>
+  <div class="card"><h3 id="pq" style="margin-top:0"></h3><p class="sub" id="ph"></p>
+  <div class="row"><input id="pa" placeholder="Жауабыңыз" size="24"><button class="btn" id="pc">Тексеру</button><button class="chip" id="ps">Шешуін көру</button><button class="chip" id="pn">Жаңа есеп</button></div><p id="pf"></p></div>`;
+  p.querySelectorAll("[data-k]").forEach(b=>b.onclick=()=>{curType=b.dataset.k;newP()});
+  $("#pn").onclick=newP;
+  $("#ps").onclick=()=>{$("#pf").innerHTML="💡 "+esc(cur.sol)};
+  $("#pc").onclick=()=>{
+    let u;try{u=nums($("#pa").value)}catch(e){u=null}
+    if(!u||!u.length){$("#pf").innerHTML='<span class="bad">Жауабыңызды түсінбедім. Мысалы: 2; 3</span>';return}
+    const a=cur.ans,good=cur.mode==="list"?u.length===a.length&&u.every((v,i)=>Math.abs(v-a[i])<1e-6):[...new Set(u.map(v=>+v.toFixed(6)))].sort((p,q)=>p-q).join()===a.join();
+    if(!counted){S.n++;counted=true}
+    if(good){if(!solved){S.xp+=10;S.ok++;solved=true}$("#pf").innerHTML='<span class="good">✅ Дұрыс! +10 XP</span>'}
+    else $("#pf").innerHTML='<span class="bad">❌ Әлі дұрыс емес. Қайта көріңіз немесе «Шешуін көру» басыңыз.</span>';
+    save();
+  };
+  newP();
+}
+function newP(){cur=TYPES[curType]();solved=counted=false;$("#pq").textContent=cur.t;$("#ph").textContent=cur.hint;$("#pa").value="";$("#pf").textContent="";document.querySelectorAll("#p-practice [data-k]").forEach(b=>b.classList.toggle("on",b.dataset.k===curType))}
+
+/* ---------- График ---------- */
+function drawGraph(){
+  $("#gErr").textContent="";
+  try{
+    const f=calc($("#gF").value),a=+$("#gA").value,b=+$("#gB").value;
+    if(!(b>a))throw Error();
+    const cv=$("#cv"),W=cv.width,H=cv.height,c=cv.getContext("2d"),xs=[],ys=[];
+    for(let i=0;i<=W;i++){const x=a+(b-a)*i/W,y=f(x);xs.push(x);ys.push(Number.isFinite(y)?y:NaN)}
+    const fin=ys.filter(Number.isFinite).sort((p,q)=>p-q);if(!fin.length)throw Error();
+    let lo=fin[Math.floor(fin.length*.02)],hi=fin[Math.floor(fin.length*.98)];if(lo===hi){lo-=1;hi+=1}const pad=(hi-lo)*.1;lo-=pad;hi+=pad;
+    const X=x=>(x-a)/(b-a)*W,Y=y=>H-(y-lo)/(hi-lo)*H;
+    c.clearRect(0,0,W,H);c.strokeStyle="#4b5f9e";c.lineWidth=1;c.beginPath();
+    if(lo<0&&hi>0){c.moveTo(0,Y(0));c.lineTo(W,Y(0))}if(a<0&&b>0){c.moveTo(X(0),0);c.lineTo(X(0),H)}c.stroke();
+    c.strokeStyle="#ffd43b";c.lineWidth=3;c.beginPath();let pen=false;
+    ys.forEach((y,i)=>{if(!Number.isFinite(y)||y<lo||y>hi){pen=false;return}pen?c.lineTo(X(xs[i]),Y(y)):c.moveTo(X(xs[i]),Y(y));pen=true});c.stroke();
+    const roots=[];for(let i=0;i<W;i++){const p=ys[i],q=ys[i+1];if(p===0)roots.push(xs[i]);else if(p*q<0){let l=xs[i],h=xs[i+1];for(let k=0;k<40;k++){const m=(l+h)/2;f(l)*f(m)<=0?h=m:l=m}const r=(l+h)/2;if(Math.abs(f(r))<1e-3)roots.push(r)}}
+    $("#gR").textContent=roots.length?"f(x) = 0 түбірлері (шамамен): "+roots.slice(0,8).map(r=>+r.toFixed(4)).join("; "):"Бұл аралықта түбір табылмады";
+  }catch(e){$("#gErr").textContent="Формуланы түсінбедім. Мысалы: x^2 - 5x + 2"}
+}
+$("#gGo").onclick=drawGraph;$("#gF").onkeydown=e=>{if(e.key==="Enter")drawGraph()};
+
+/* ---------- Курстар ---------- */
+const COURSES=[
+{n:"Python негіздері",l:[
+ {t:"Айнымалылар мен print",x:"Айнымалы — деректі сақтайтын атау. print() нәтижені экранға шығарады.",c:"name = 'Айдар'\nage = 15\nprint(name, age)",q:["age = 15 болса, age + 1 неге тең?",["14","16","151"],1]},
+ {t:"Цикл және шарт",x:"if шартты тексереді, for әрекетті қайталайды.",c:"for i in range(1, 4):\n    if i % 2 == 0:\n        print(i, 'жұп')",q:["range(1, 4) қандай сандарды береді?",["1, 2, 3","1, 2, 3, 4","0, 1, 2, 3"],0]}]},
+{n:"Жасанды интеллект негіздері",l:[
+ {t:"ЖИ және Machine Learning",x:"Machine Learning ережені адам жазбай, деректен үйренеді. Қадамдар: деректер, модель, оқыту, тестілеу.",c:"from sklearn.linear_model import LinearRegression\nm = LinearRegression().fit([[1],[2],[3]], [2,4,6])\nprint(m.predict([[4]]))",q:["Модель қай кезеңде мысалдардан үйренеді?",["Тестілеу","Оқыту","Деректі жинау"],1]},
+ {t:"Тіл модельдері (LLM)",x:"Gemini сияқты тіл модельдері мәтінді түсініп, жауап жасайды. Бұл платформадағы AI да осындай модельмен жұмыс істейді.",c:"# Модельге сұрақ жіберу идеясы\nanswer = ask('Дискриминант деген не?')",q:["LLM нені жақсы істейді?",["Мәтінмен жұмыс","Суретті басып шығару","Интернетті жылдамдату"],0]}]},
+ {n:"Алгебра",l:[
+ {t:"Квадрат теңдеу",x:"ax² + bx + c = 0 теңдеуінде D = b² − 4ac. D > 0 болса, екі түбір бар.",c:"D = b**2 - 4*a*c\nx1 = (-b + D**0.5) / (2*a)",q:["x² − 5x + 6 = 0 үшін D неге тең?",["1","25","49"],0]},
+ {t:"Туынды",x:"Туынды — функцияның өзгеру жылдамдығы. (xⁿ)′ = n·xⁿ⁻¹.",c:"# f(x) = x**3  ->  f'(x) = 3*x**2",q:["(x³)′ неге тең?",["3x²","x²","3x"],0]}]}];
+let cs=[0,0];
+function renderCourses(){
+  const p=$("#p-courses"),L=COURSES[cs[0]].l[cs[1]],key=cs.join(":");
+  p.innerHTML=`<h2>📚 Курстар</h2><p class="sub">Сабақты оқып, тестті тапсырсаңыз +20 XP аласыз.</p><div class="two"><div class="les">${COURSES.map((c,ci)=>`<b>${c.n}</b>`+c.l.map((l,li)=>`<button class="chip ${ci===cs[0]&&li===cs[1]?"on":""}" data-c="${ci}:${li}">${S.done[ci+":"+li]?"✅ ":""}${l.t}</button>`).join("")).join("")}</div>
+  <div class="card"><h3 style="margin-top:0">${L.t}</h3><p>${L.x}</p><pre>${esc(L.c)}</pre><p><b>${L.q[0]}</b></p>${L.q[1].map((o,i)=>`<label class="opt"><input type="radio" name="q" value="${i}"> ${o}</label>`).join("")}
+  <div class="row"><button class="btn" id="qc">Тексеру</button><button class="chip" id="qa">AI-дан сұрау</button></div><p id="qf"></p></div></div>`;
+  p.querySelectorAll("[data-c]").forEach(b=>b.onclick=()=>{cs=b.dataset.c.split(":").map(Number);renderCourses()});
+  $("#qc").onclick=()=>{const v=p.querySelector("input:checked");if(!v){$("#qf").textContent="Жауап таңдаңыз";return}
+    if(+v.value===L.q[2]){if(!S.done[key]){S.done[key]=1;S.xp+=20;save()}$("#qf").innerHTML='<span class="good">✅ Дұрыс! Сабақ аяқталды.</span>';p.querySelector(`[data-c="${key}"]`).textContent="✅ "+L.t}
+    else $("#qf").innerHTML='<span class="bad">❌ Қате. Мәтінді қайта оқып көріңіз.</span>'};
+  $("#qa").onclick=()=>{go("tutor");tutor.send(`«${L.t}» сабағын қарапайым мысалмен түсіндір`)};
+}
+
+/* ---------- Басты бет және навигация ---------- */
+const PAGES=[["home","🏠","Басты бет"],["solve","🧮","Есеп шешу"],["tutor","🤖","AI тьютор"],["practice","🎯","Жаттығу"],["graph","📈","График"],["courses","📚","Курстар"]];
+$("#nav").innerHTML="<b>🧠 AI Learning Hub</b>"+PAGES.map(p=>`<a data-id="${p[0]}" tabindex="0"><span>${p[1]}</span>${p[2]}</a>`).join("");
+$("#nav").onclick=e=>{const a=e.target.closest("a");if(a)go(a.dataset.id)};
+function renderHome(){
+  const total=COURSES.reduce((n,c)=>n+c.l.length,0),done=Object.keys(S.done).length;
+  $("#p-home").innerHTML=`<h1>Математика мен жасанды интеллект бір жерде</h1><p class="sub">Тіркелудің де, кілттің де қажеті жоқ. Бастау үшін бөлімді таңдаңыз.</p>
+  <div class="grid"><div class="card stat"><b>${Math.floor(S.xp/100)+1}</b>Деңгей</div><div class="card stat"><b>${S.xp}</b>XP</div><div class="card stat"><b>${done}/${total}</b>Сабақ</div><div class="card stat"><b>${S.ok}/${S.n}</b>Жаттығу</div></div>
+  <div class="grid">${[["solve","🧮 Есеп шешу","Мәтін немесе сурет арқылы кез келген есепті қадамдап шешеді"],["tutor","🤖 AI тьютор","Python, ЖИ және математика сұрақтарына жауап береді"],["practice","🎯 Жаттығу","Кездейсоқ есептерді өзіңіз шешіп, XP жинаңыз"],["graph","📈 График","Функцияны салып, түбірлерін табыңыз"],["courses","📚 Курстар","Қысқа сабақтар мен тесттер"]].map(c=>`<div class="card go" data-go="${c[0]}"><b>${c[1]}</b><br><span class="sub">${c[2]}</span></div>`).join("")}
+  <a class="card go" href="index.html" style="color:inherit;text-decoration:none"><b>🎓 Презентация</b><br><span class="sub">Жобаның теориялық бөлімі</span></a></div>
+  <p class="sub">AI кейде қателесуі мүмкін, маңызды есептерде жауапты өзіңіз тексеріңіз.</p>`;
+  document.querySelectorAll("[data-go]").forEach(c=>c.onclick=()=>go(c.dataset.go));
+}
+function go(id){
+  if(!PAGES.some(p=>p[0]===id))id="home";
+  document.querySelectorAll(".page").forEach(p=>p.hidden=p.id!=="p-"+id);
+  document.querySelectorAll("#nav a").forEach(a=>a.classList.toggle("on",a.dataset.id===id));
+  if(id==="home")renderHome();if(id==="courses")renderCourses();if(id==="practice"&&!cur)renderPractice();if(id==="graph")drawGraph();
+  try{history.replaceState(null,"","#"+id)}catch(e){}scrollTo(0,0);
+}
+go(location.hash.slice(1)||"home");
+</script>
+</body>
+</html>
