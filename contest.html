@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AI Жарыс: топтар сайысы</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#0f1a3a;--bg2:#17254f;--ink:#eef2ff;--mut:#a9b6dd;--line:#2b3c72;--yel:#ffd43b;--ok:#58d68d;--bad:#ff7a7a;--t0:#4b8bbe;--t1:#ffd43b;--t2:#ff7a7a}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.55 Montserrat,system-ui,sans-serif;padding:20px clamp(12px,3vw,40px) 40px}
+header{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px}
+h1{margin:0;font-size:clamp(1.3rem,3vw,2rem);font-weight:800}h1 span{color:var(--yel)}
+.btn,.chip{font:inherit;color:var(--ink);background:var(--bg2);border:1px solid var(--line);border-radius:10px;padding:8px 14px;cursor:pointer}
+.btn.pri{background:var(--yel);color:#10183a;font-weight:600;border:0}
+:focus-visible{outline:3px solid var(--yel);outline-offset:2px}
+#score{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:12px}
+.team{background:var(--bg2);border:2px solid var(--line);border-radius:16px;padding:12px 14px;text-align:center;position:relative}
+.team.turn{border-color:var(--c);box-shadow:0 0 0 3px color-mix(in srgb,var(--c) 30%,transparent)}
+.team .ic{color:var(--c);font-size:1.3rem}
+.team input{width:100%;background:transparent;border:0;border-bottom:1px dashed var(--line);color:var(--ink);font:600 1rem Montserrat,sans-serif;text-align:center;padding:2px}
+.team .pt{font-size:clamp(2rem,6vw,3.4rem);font-weight:800;color:var(--c);line-height:1.1}
+.team .adj{display:flex;gap:6px;justify-content:center;margin-top:4px}
+.team .adj button{padding:2px 10px;font-size:13px}
+.tag{position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:var(--c);color:#10183a;font-size:12px;font-weight:600;padding:1px 10px;border-radius:99px}
+#turn{margin:0 0 14px;color:var(--mut)}
+.row{display:grid;grid-template-columns:130px repeat(4,1fr);gap:8px;margin-bottom:8px}
+.lv{background:#0a1230;border:1px solid var(--line);border-radius:10px;padding:8px 10px;font-size:13px;display:flex;flex-direction:column;justify-content:center}
+.lv b{color:var(--yel)}
+.cell{font:800 clamp(1.1rem,3.5vw,1.8rem) Montserrat,sans-serif;color:var(--yel);background:var(--bg2);border:1px solid var(--line);border-radius:12px;min-height:68px;cursor:pointer}
+.cell:hover:not(:disabled){background:#1f3170;border-color:var(--yel)}
+.cell:disabled{color:#4b5f9e;cursor:default;background:#0a1230}
+#ov{position:fixed;inset:0;background:#050a1fdd;display:flex;align-items:flex-start;justify-content:center;padding:20px 12px;overflow:auto;z-index:20}
+#ov[hidden]{display:none}
+.modal{background:var(--bg);border:1px solid var(--line);border-radius:18px;padding:22px;width:100%;max-width:780px}
+.top{display:flex;justify-content:space-between;align-items:center;gap:10px;color:var(--mut);font-size:14px}
+#tm{font:800 1.6rem Montserrat;color:var(--yel)}#tm.low{color:var(--bad)}
+.q{font-size:1.25rem;font-weight:600;margin:12px 0}
+pre{background:#0a1230;border:1px solid var(--line);border-radius:10px;padding:12px 14px;overflow-x:auto;font:400 14px/1.5 'JetBrains Mono',monospace;white-space:pre-wrap;margin:0 0 12px}
+.who{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:10px 0;font-size:14px;color:var(--mut)}
+.who .chip{border-color:var(--c);color:var(--ink)}.who .chip.on{background:var(--c);color:#10183a;font-weight:600}
+.who .chip:disabled{opacity:.35;text-decoration:line-through;cursor:default}
+.opt{display:block;width:100%;text-align:left;font:inherit;font-size:1.05rem;color:var(--ink);background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:14px 16px;margin:8px 0;cursor:pointer}
+.opt:hover:not(:disabled){border-color:var(--yel)}
+.opt.bad{border-color:var(--bad);background:#3a1d2c;text-decoration:line-through}
+.opt.good{border-color:var(--ok);background:#1b3a35}
+.msg{margin:12px 0;padding:12px 14px;border-radius:12px;background:var(--bg2);border-left:4px solid var(--yel)}
+.msg.g{border-color:var(--ok)}.msg.r{border-color:var(--bad)}
+.rank{display:flex;justify-content:space-between;padding:12px 16px;margin:8px 0;border-radius:12px;background:var(--bg2);border-left:6px solid var(--c);font-size:1.15rem}
+@media(max-width:640px){.row{grid-template-columns:78px repeat(4,1fr);gap:5px}.lv{font-size:11px;padding:4px 6px}.cell{min-height:56px}}
+</style>
+</head>
+<body>
+<header>
+<h1>🏆 <span>AI</span> Жарыс: топтар сайысы</h1>
+<div><button class="btn" id="rules">Ереже</button> <button class="btn" id="fin">Аяқтау</button> <button class="btn" id="rst">Жаңа ойын</button></div>
+</header>
+<div id="score"></div>
+<p id="turn"></p>
+<div id="board"></div>
+<div id="ov" hidden><div class="modal" id="md" role="dialog" aria-modal="true"></div></div>
+
+<script>
+const $=s=>document.querySelector(s);
+const esc=s=>String(s).replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+const COL=["#4b8bbe","#ffd43b","#ff7a7a"],IC=["▲","●","■"],SECS=30;
+const SP=["🚫 Спам","✅ Спам емес"];
+const LV=[
+{n:"Негіздер",p:10,q:[
+ {t:"Python неге жасанды интеллект саласында кең қолданылады?",o:["Синтаксисі қарапайым және дайын кітапханалары көп","Ол тек ойындар жасауға арналған","Ол интернетсіз ғана жұмыс істейді","Ол тек сурет салады"],a:0,e:"Python-ды үйрену оңай, ал NumPy, Pandas, scikit-learn, PyTorch сияқты кітапханалар жұмысты жеңілдетеді."},
+ {t:"Деректерді кестемен жинап, өңдеп, талдауға қай кітапхана ыңғайлы?",o:["Pandas","OpenCV","SymPy","PyTorch"],a:0,e:"Pandas кестелік деректермен (DataFrame) жұмыс істеуге арналған."},
+ {t:"Жасанды интеллект дегеніміз не?",o:["Деректерден үйреніп, болжам немесе шешім жасай алатын жүйе","Тек адам тәрізді робот","Жылдам интернет желісі","Компьютердің экраны"],a:0,e:"ЖИ ережені адам жазбай, деректерден заңдылық табуға тырысады."},
+ {t:"Сурет пен бейнені өңдеуге қай кітапхана арналған?",o:["OpenCV","Pandas","NumPy","SymPy"],a:0,e:"OpenCV — Computer Vision (компьютерлік көру) кітапханасы."}]},
+{n:"Бұл детектор нені анықтайды?",p:20,q:[
+ {t:"Спам детектор нені анықтайды?",o:["Қалаусыз, жарнамалық немесе алаяқтық хабарларды","Компьютердегі қатты диск көлемін","Интернет жылдамдығын","Жаңа достарды"],a:0,e:"Спам детектор хабардың мәтініне, жіберушіге, сілтемесіне қарап, оны «спам» немесе «спам емес» деп жіктейді."},
+ {t:"Телефонды бет арқылы ашатын жүйе нені анықтайды?",o:["Суреттегі адамның бет келбетін","Дауыстың қаттылығын","Батареяның зарядын","Wi-Fi паролін"],a:0,e:"Бұл Computer Vision: жүйе бет кескінін сақталған үлгімен салыстырады."},
+ {t:"Банктегі алаяқтықты анықтау жүйесі нені іздейді?",o:["Әдеттен тыс, күмәнді төлемдерді","Ең арзан тауарларды","Ең көп ақшасы бар клиентті","Банктің жұмыс уақытын"],a:0,e:"Модель сіздің әдеттегі төлемдеріңізді үйреніп, одан өзгеше әрекетті күмәнді деп белгілейді."},
+ {t:"Навигациядағы кептеліс болжамы нені пайдаланады?",o:["Көлік қозғалысының бұрынғы және қазіргі деректерін","Тек жүргізушінің аты-жөнін","Тек ауа райын","Тек радио жаңалығын"],a:0,e:"Модель көп көліктің жылдамдығы мен уақыт заңдылығын талдап, кептелісті алдын ала болжайды."}]},
+{n:"Спам па, әлде жоқ па?",p:30,q:[
+ {t:"Мына хабар спам ба?",c:"ЖЕҢІСКЕ ЖЕТТІҢІЗ! 1 000 000 теңге ұтып алдыңыз! Дереу сілтемені басып, карта нөміріңізді жіберіңіз.",o:SP,a:0,e:"Күмәнді ұтыс, асықтыру және карта нөмірін сұрау — спамның айқын белгілері."},
+ {t:"Мына хабар спам ба?",c:"Ертең физикадан бақылау жұмысы 2-сабақта болады. Калькулятор алып келіңдер.",o:SP,a:1,e:"Мектеп жайында, ақша да, күмәнді сілтеме де жоқ. Бұл — қалыпты хабар."},
+ {t:"Мына хабар спам ба?",c:"Банктен хабарлайды. Картаңыз бұғатталды. SMS-тегі кодты бізге айтыңыз.",o:SP,a:0,e:"Банк ешқашан SMS-кодты сұрамайды. Бұл — алаяқтық (фишинг) спамы."},
+ {t:"Мына хабар спам ба?",c:"Мектеп олимпиадасына тіркелу ертең аяқталады. Толық ақпарат мектеп сайтында.",o:SP,a:1,e:"Нақты ұйымнан келген, ақша немесе құпия дерек сұрамайтын хабар. Бірақ модель мұндай хатты да қате «спам» деп алуы мүмкін."}]},
+{n:"Python коды",p:40,q:[
+ {t:"Бұл жол не істейді?",c:"model.fit(X, y)",o:["Модельді деректермен оқытады","Нәтижені экранға шығарады","Деректерді жояды","Файлды жүктейді"],a:0,e:"fit — «үйрету»: модель X (белгілер) мен y (дұрыс жауап) арасындағы заңдылықты табады."},
+ {t:"Бұл жол не істейді?",c:"df = pd.read_csv('students.csv')",o:["CSV файлдағы деректі кесте (DataFrame) етіп оқиды","Файлды өшіреді","Графикті салады","Модельді сақтайды"],a:0,e:"read_csv кесте түріндегі файлды Pandas-қа жүктейді."},
+ {t:"Бұл жол не істейді?",c:"model.predict([[80, 90]])",o:["Жаңа деректер бойынша болжам жасайды","Модельді қайта оқытады","Қатені түзетеді","Деректі тазалайды"],a:0,e:"predict — оқытылған модельдің жаңа мысалға болжамын береді."},
+ {t:"Бұл жол не істейді?",c:"train_test_split(X, y, test_size=0.2)",o:["Деректің 20%-ын тестілеуге бөліп қояды","Деректің 20%-ын жояды","Модельді 20 рет оқытады","Деректі 20 бағанға бөледі"],a:0,e:"Тест үшін бөлек қалдырылған дерек модельдің жаңа мысалдағы дәлдігін адал тексереді."}]},
+{n:"Өмір және сыни ойлау",p:50,q:[
+ {t:"Спам детектор мұғалімнің маңызды хатын «спам» деп белгілеп жіберіп алды. Бұл нені көрсетеді?",o:["Модель қателесуі мүмкін, сондықтан маңызды нәтижені адам тексеруі керек","Мұғалім хатты қате жазған","Спам детектор мүлде істемейді","Компьютер бұзылған"],a:0,e:"Бұл «жалған оң» нәтиже. ЖИ мінсіз емес, маңызды шешімде адамның бақылауы қажет."},
+ {t:"Модельді тек бір қаладағы балалардың деректерімен оқытты. Басқа аймақта нәтижесі нашар болды. Негізгі себеп қандай?",o:["Деректер біржақты болды, модель басқа жағдайды көрмеген","Python баяу жұмыс істеді","Компьютер ескі болды","Модельдің аты ұнамаған"],a:0,e:"Деректер әртүрлі болмаса, модель жаңа топта қателеседі. Мұны деректегі біржақтылық (bias) дейді."},
+ {t:"Қайсысына қарапайым ереже жетпейді, жасанды интеллект қажет?",o:["Фотосуреттен мысықты тану","Екі санды қосу","Бағасы 50-ден жоғарыны «өтті» деу","Сағат уақытын көрсету"],a:0,e:"Мысықтың бейнесін ереже арқылы жазу мүмкін емес, ал модель көп суреттен үйреніп біледі."},
+ {t:"YouTube саған ұқсас бейнелерді неге ұсынады?",o:["Модель көрген бейнелеріңнің деректерінен қызығушылығыңды болжайды","Әр бейнені адам қолмен таңдайды","Ол кездейсоқ бейне көрсетеді","Ол ауа райына қарайды"],a:0,e:"Ұсыныс жүйесі көрген, ұнатқан бейнелерден заңдылық табады. Сондықтан деректеріңіз қалай қолданылатынын білген пайдалы."}]}];
+
+let S;try{S=JSON.parse(localStorage.getItem("contest"))}catch(e){}
+const fresh=()=>({teams:[0,1,2].map(i=>({name:(i+1)+"-топ",score:0})),used:{},turn:0});
+if(!S||!S.teams||S.teams.length!==3)S=fresh();
+const save=()=>{try{localStorage.setItem("contest",JSON.stringify(S))}catch(e){}};
+const tn=i=>S.teams[i].name||(i+1)+"-топ";
+const total=LV.reduce((n,l)=>n+l.q.length,0);
+const sh=a=>{a=[...a];for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a};
+
+function render(){
+  $("#score").innerHTML=S.teams.map((t,i)=>`<div class="team ${i===S.turn?"turn":""}" style="--c:${COL[i]}">${i===S.turn?'<span class="tag">Кезек</span>':""}<div class="ic">${IC[i]}</div><input value="${esc(t.name)}" data-i="${i}" aria-label="Топ атауы" maxlength="22"><div class="pt">${t.score}</div><div class="adj"><button class="chip" data-a="${i}:-5">−5</button><button class="chip" data-a="${i}:5">+5</button></div></div>`).join("");
+  const done=Object.keys(S.used).length;
+  $("#turn").innerHTML=`Таңдау кезегі: <b style="color:${COL[S.turn]}">${IC[S.turn]} ${esc(tn(S.turn))}</b>. Жасалған сұрақ: ${done}/${total}`;
+  $("#board").innerHTML=LV.map((l,li)=>`<div class="row"><div class="lv"><b>${li+1}-деңгей</b>${l.n}</div>${l.q.map((_,qi)=>{const u=S.used[li+"-"+qi];return `<button class="cell" data-l="${li}" data-q="${qi}" ${u?"disabled":""}>${u?"✓":l.p}</button>`}).join("")}</div>`).join("");
+}
+$("#score").addEventListener("input",e=>{if(e.target.dataset.i!==undefined){S.teams[e.target.dataset.i].name=e.target.value;save()}});
+$("#score").addEventListener("click",e=>{const b=e.target.closest("[data-a]");if(!b)return;const[i,d]=b.dataset.a.split(":").map(Number);S.teams[i].score+=d;save();render()});
+$("#board").addEventListener("click",e=>{const b=e.target.closest(".cell");if(b&&!b.disabled)openQ(+b.dataset.l,+b.dataset.q)});
+
+/* ---------- Сұрақ терезесі ---------- */
+let Q=null,timer=null;
+const show=h=>{$("#md").innerHTML=h;$("#ov").hidden=false};
+function closeModal(){clearInterval(timer);Q=null;$("#ov").hidden=true;render();if(Object.keys(S.used).length>=total&&!S.finished){S.finished=true;save();final()}}
+function openQ(l,q){Q={l,q,order:sh(LV[l].q[q].o.map((_,i)=>i)),locked:[],bad:[],who:S.turn,left:SECS,done:false,msg:""};startTimer();drawQ()}
+function startTimer(){clearInterval(timer);Q.left=SECS;timer=setInterval(()=>{Q.left--;const el=$("#tm");if(el){el.textContent=Q.left;el.classList.toggle("low",Q.left<=5)}if(Q.left<=0){clearInterval(timer);wrong(true)}},1000)}
+function drawQ(){
+  const L=LV[Q.l],it=L.q[Q.q];
+  const who=[0,1,2].map(i=>`<button class="chip ${i===Q.who?"on":""}" style="--c:${COL[i]}" data-w="${i}" ${Q.locked.includes(i)||Q.done?"disabled":""}>${IC[i]} ${esc(tn(i))}</button>`).join("");
+  show(`<div class="top"><span>${Q.l+1}-деңгей · ${L.n} · <b style="color:var(--yel)">${L.p} ұпай</b></span><span id="tm" class="${Q.left<=5?"low":""}">${Q.done?"":Q.left}</span></div>
+  <div class="q">${esc(it.t)}</div>${it.c?`<pre>${esc(it.c)}</pre>`:""}
+  ${Q.done?"":`<div class="who">Жауап беретін топ: ${who}</div>`}
+  ${Q.order.map(i=>`<button class="opt ${Q.bad.includes(i)?"bad":""} ${Q.done&&i===it.a?"good":""}" data-o="${i}" ${Q.done||Q.bad.includes(i)?"disabled":""}>${esc(it.o[i])}</button>`).join("")}
+  ${Q.msg?`<div class="msg ${Q.done?(Q.win?"g":"r"):""}">${Q.msg}</div>`:""}
+  ${Q.done?`<div class="msg">💡 ${esc(it.e)}</div><button class="btn pri" id="nx">Жалғастыру</button>`:`<p><button class="chip" id="cl">Сұрақты жабу (ұпайсыз)</button></p>`}`);
+}
+function wrong(timeout){
+  clearInterval(timer);
+  const it=LV[Q.l].q[Q.q];
+  Q.locked.push(Q.who);
+  const nxt=[1,2,3].map(k=>(Q.who+k)%3).find(t=>!Q.locked.includes(t));
+  if(nxt===undefined){Q.done=true;Q.win=false;S.used[Q.l+"-"+Q.q]=true;S.turn=(S.turn+1)%3;Q.msg="Ешбір топ дұрыс жауап бермеді. Дұрыс жауап жасыл түспен көрсетілген.";save();drawQ();return}
+  Q.msg=`${timeout?"⏰ Уақыт бітті":"❌ Қате"}! Енді ${IC[nxt]} ${esc(tn(nxt))} жауап береді (толық ұпай).`;
+  Q.who=nxt;startTimer();drawQ();
+}
+$("#md").addEventListener("click",e=>{
+  if(!Q)return;
+  const w=e.target.closest("[data-w]");if(w){Q.who=+w.dataset.w;drawQ();return}
+  const o=e.target.closest("[data-o]");
+  if(o&&!Q.done){
+    const it=LV[Q.l].q[Q.q],i=+o.dataset.o;
+    if(i===it.a){clearInterval(timer);const p=LV[Q.l].p;S.teams[Q.who].score+=p;S.used[Q.l+"-"+Q.q]=true;S.turn=(S.turn+1)%3;Q.done=true;Q.win=true;Q.msg=`✅ Дұрыс! ${IC[Q.who]} ${esc(tn(Q.who))} +${p} ұпай алды.`;save();drawQ()}
+    else{Q.bad.push(i);wrong(false)}
+    return}
+  if(e.target.id==="nx")closeModal();
+  if(e.target.id==="cl"){clearInterval(timer);Q=null;$("#ov").hidden=true;render()}
+});
+document.addEventListener("keydown",e=>{if(e.key==="Escape"&&Q&&!Q.done){clearInterval(timer);Q=null;$("#ov").hidden=true;render()}});
+
+/* ---------- Қорытынды және ереже ---------- */
+function final(){
+  const r=S.teams.map((t,i)=>({i,n:tn(i),s:t.score})).sort((a,b)=>b.s-a.s),top=r.filter(x=>x.s===r[0].s);
+  show(`<h2 style="margin-top:0">🏆 Қорытынды</h2><p class="q">${top.length>1?"Тең нәтиже: "+top.map(x=>esc(x.n)).join(", "):"Жеңімпаз: "+esc(top[0].n)+"!"}</p>
+  ${r.map((x,k)=>`<div class="rank" style="--c:${COL[x.i]}"><span>${["🥇","🥈","🥉"][k]} ${IC[x.i]} ${esc(x.n)}</span><b>${x.s}</b></div>`).join("")}
+  <p style="color:var(--mut)">Барлық топқа рақмет. Сіздер бүгін жасанды интеллектті ойын арқылы үйрендіңіздер.</p><button class="btn pri" id="cf">Жабу</button>`);
+}
+$("#fin").onclick=()=>{S.finished=true;save();final()};
+$("#md").addEventListener("click",e=>{if(e.target.id==="cf"){$("#ov").hidden=true}});
+$("#rst").onclick=()=>{if(confirm("Ұпайлар мен сұрақтар тазаланады. Жаңа ойын бастаймыз ба?")){S=fresh();save();render()}};
+$("#rules").onclick=()=>show(`<h2 style="margin-top:0">Ойын ережесі</h2>
+<p>1. Кезек тәртібімен топ тақтадан сұрақ таңдайды. Деңгей жоғарылаған сайын ұпай көбейеді (10, 20, 30, 40, 50).</p>
+<p>2. Топ ақылдасып жауап береді, жүргізуші сол жауапты басады. Әр әрекетке ${SECS} секунд беріледі.</p>
+<p>3. Дұрыс жауапқа толық ұпай беріледі. Қате болса немесе уақыт бітсе, жауап беру құқығы келесі топқа өтеді (ол да толық ұпай алады).</p>
+<p>4. Әр сұрақтан кейін дұрыс жауаптың түсіндірмесі шығады. Сондықтан қате жауап та үйретеді.</p>
+<p>5. Барлық сұрақ біткенде ең көп ұпай жинаған топ жеңеді. Жүргізуші қажет болса, ұпайды ±5-ке түзете алады.</p>
+<button class="btn pri" id="cf">Түсінікті</button>`);
+render();
+</script>
+</body>
+</html>
